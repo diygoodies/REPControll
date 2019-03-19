@@ -1,14 +1,8 @@
 # REPControll
 > Universal HAMrepeater controller.
 
-[![NPM Version][npm-image]][npm-url]
-[![Build Status][travis-image]][travis-url]
-[![Downloads Stats][npm-downloads]][npm-url]
-
-Universal HAMrepeater controller.Based on STM32 bluepill adrduino board. It basically connects two base VHF or UHF radios. 
+Based on STM32 bluepill adrduino board. It basically connects two base VHF or UHF radios. 
 ![](https://github.com/diygoodies/REPControll/blob/master/Schematics/frontview.jpg)
-
-
 
 ## Usage example
 
