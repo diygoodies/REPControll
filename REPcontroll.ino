@@ -2,25 +2,6 @@
 
   Serialport set and display RTC clock , Write by CSNOL https://github.com/csnol/STM32-Examples
   based on https://github.com/rogerclarkmelbourne/Arduino_STM32
-
-  1. Blink on PC13 per 4s or 7s by attachAlarmInterrupt for 10 times
-  2. Second counter by attachSecondsInterrupt
-  3. Serial output on(41s) or off(21s) by creatAlarm
-  4. change to your timezone in the sketch;
-  3. get Unix epoch time from https://www.epochconverter.com/ ;
-  4. last step input the 10 digit number( example: 1503945555) to Serialport ;
-  5. the clock will be reset to you wanted.
-
-  ##  Why the 10 digit Unix epoch time be used?
-****Because I wanna connect to NTP server by ESP-8266.
-****in the <NTPClient.h> library. getNtpTime() will return this 10 digit Unix epoch time.
-*
-*  嗨！朋友们， 这是一个STM32F10x系列的RTC应用的例子，希望对你的编码有所帮助
-*  这个程序基于https://github.com/rogerclarkmelbourne/Arduino_STM32 ， 感谢所有贡献者的付出。
-*  程序测试了 F10x系列RTC 的 几种中断， 并通过LED和串口进行表达。
-*  RTClock 使用 UTC 作为时间标准， 你可以从https://www.epochconverter.com/ 获得 Unix epoch time数值
-*  并通过串口进行设置， 当然你也可以略微修改一下串口接收处理方法，直接从串口接收日期形式。如 2017-9-13-10:30:00, 
-*  另外一个方法是通过ESP8266获取NTP网络时间，并定期发送给F10x进行更新。
 */
 
 
@@ -28,7 +9,7 @@
 
 #define PTT_TIMOUT 3
 #define MORSETAB 39
-#define ALRMRLD 900
+#define ALRMRLD 900 //15min*60sec
 
 #define segG PB3 
 #define segF PB4 
@@ -50,9 +31,10 @@ tm_t mtt;
 uint8_t dateread[11];
 bool dispflag = true;
 
-uint8_t ts=PTT_TIMOUT+1;
+uint8_t ts=PTT_TIMOUT+2;
 bool alarmflag = false;
 bool bipflag = false;
+bool callorQTH = true;
 uint8_t countSQL=0;
 //-----------------------------------------------------------------------------
                            //B3456789
@@ -220,7 +202,7 @@ void SecondCount ()
   else
   {
     segout(0xFF);
-    digitalWrite(pinPTT, LOW);
+    //digitalWrite(pinPTT, LOW);
   }
 }
 //-----------------------------------------------------------------------------
@@ -283,8 +265,6 @@ char playmorse(char* morsearray)
   char arindx=0;
   while (arindx!=strlen(morsearray))
   {
-    //Serial.println(morsearray+arindx);
-    //Serial.write(*(morsearray+arindx));
        char i=0;
        while (i<MORSETAB)
         {
@@ -365,7 +345,8 @@ void loop()
     delay(50);
     if (countSQL>=3)
     {
-      ts=PTT_TIMOUT;
+      ts=PTT_TIMOUT+1;
+      segout(0xFF);
       countSQL=0;
       alarmset();
       digitalWrite(pinGRN, HIGH);  
@@ -373,6 +354,10 @@ void loop()
   }
   else
   {
+    if (ts==PTT_TIMOUT+1)
+    {
+      ts=PTT_TIMOUT;
+    }
     countSQL=0;
     digitalWrite(pinGRN, LOW); 
   }
@@ -380,12 +365,12 @@ void loop()
   if (bipflag == true)
   {
      bipflag = false;
-     digitalWrite(pinPTT, HIGH);
+     //digitalWrite(pinPTT, HIGH);
      delay(2*bip);
      tone(pinSND, frq);   
      delay(bip);                  
      noTone(pinSND);
-     digitalWrite(pinPTT, HIGH);
+     digitalWrite(pinPTT, LOW);
   }
 
   if(alarmflag == true)
@@ -393,7 +378,19 @@ void loop()
     alarmflag = false;
     alarmset();  
     Serial.println(" Alarm ");
-    playmorse("KN39MJ");
+    digitalWrite(pinPTT, HIGH);
+    if (callorQTH==true)
+    {
+      playmorse("UR5TLZ");
+      Serial.println("CallSign");
+    }
+    else
+    {
+      playmorse("KN39MJ");
+      Serial.println("QTH");
+    }
+    callorQTH=!callorQTH;
+    digitalWrite(pinPTT, LOW);
   }
   
   if (tt1 != tt && dispflag == true )
@@ -404,5 +401,31 @@ void loop()
     sprintf(s, "RTC timestamp: %s %u %u, %s, %02u:%02u:%02u\n",
       months[mtt.month], mtt.day, mtt.year+1970, weekdays[mtt.weekday], mtt.hour, mtt.minute, mtt.second);
     Serial.print(s);
+    if (mtt.second==0)
+    {
+      segout(mtt.hour/10);
+      Serial.print(mtt.hour/10);
+      delay(500);
+      segout(mtt.hour-((mtt.hour/10)*10));
+      Serial.print(mtt.hour-((mtt.hour/10)*10));
+      delay(500);
+      Serial.print(":");
+      
+      digitalWrite(segDit, LOW);
+      delay(100);
+      digitalWrite(segDit, HIGH);
+      delay(100);
+      digitalWrite(segDit, LOW);
+      delay(100);
+      digitalWrite(segDit, HIGH);
+      delay(100);
+      
+      segout(mtt.minute/10);
+      Serial.print(mtt.minute/10);
+      delay(500);
+      segout(mtt.minute-((mtt.minute/10)*10));
+      Serial.println(mtt.minute-((mtt.minute/10)*10));
+      delay(700);
+    }
   }
 }
