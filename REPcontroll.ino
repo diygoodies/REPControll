@@ -197,7 +197,7 @@ void SecondCount ()
      bipflag = true;
     }
     ts--;
-    digitalWrite(pinPTT, HIGH);
+    //digitalWrite(pinPTT, HIGH);
   }
   else
   {
@@ -349,7 +349,8 @@ void loop()
       segout(0xFF);
       countSQL=0;
       alarmset();
-      digitalWrite(pinGRN, HIGH);  
+      digitalWrite(pinGRN, HIGH);
+      digitalWrite(pinPTT, HIGH);  
     }
   }
   else
@@ -379,6 +380,7 @@ void loop()
     alarmset();  
     Serial.println(" Alarm ");
     digitalWrite(pinPTT, HIGH);
+    delay(bip);
     if (callorQTH==true)
     {
       playmorse("UR5TLZ");
@@ -390,6 +392,7 @@ void loop()
       Serial.println("QTH");
     }
     callorQTH=!callorQTH;
+    delay(bip);
     digitalWrite(pinPTT, LOW);
   }
   

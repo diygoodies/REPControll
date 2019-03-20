@@ -8,8 +8,13 @@ Based on STM32 bluepill adrduino board. It basically connects two base VHF or UH
 
 Controller makes a 3 second TX tail with short beep in the end after each transmition, to understand that repeater is available, and message forwarded. 
 Every 15 minutes Controller sends on air CALLSIGN of repeater or QTH locator by morse code.
-Schematics [https://github.com/diygoodies/REPControll/blob/master/Schematics/REPControll.pdf]
+Schematics https://github.com/diygoodies/REPControll/blob/master/Schematics/REPControll.pdf
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/hl8Wln0HUho/0.jpg)](https://www.youtube.com/watch?v=hl8Wln0HUho)
   
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/s5PwGDG2AOU/0.jpg)](https://www.youtube.com/watch?v=s5PwGDG2AOU)
+
+
   1. Blink on PC13 per 2s 
   2. Second counter by attachSecondsInterrupt
   3. change to your timezone in the sketch;
@@ -19,5 +24,5 @@ Schematics [https://github.com/diygoodies/REPControll/blob/master/Schematics/REP
 
 ## Development setup
 Code based on BluePill-RTClock-test example of
-[https://github.com/rogerclarkmelbourne/Arduino_STM32]
+https://github.com/rogerclarkmelbourne/Arduino_STM32
 package
