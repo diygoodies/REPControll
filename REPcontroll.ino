@@ -2,14 +2,14 @@
 
   Serialport set and display RTC clock , Write by CSNOL https://github.com/csnol/STM32-Examples
   based on https://github.com/rogerclarkmelbourne/Arduino_STM32
+  get Unix epoch time from https://www.epochconverter.com/ ;
 */
 
 
 #include <RTClock.h>
+#include <EEPROM.h>
 
-#define PTT_TIMOUT 3
 #define MORSETAB 39
-#define ALRMRLD 900 //15min*60sec
 
 #define segG PB3 
 #define segF PB4 
@@ -24,14 +24,32 @@
 #define pinSND PB15
 #define pinGRN PA8
 
+typedef struct{
+    uint8_t csgn[8]="UR0TUA";
+    uint8_t qth[8]="KN39MJ";
+    uint16_t csgnprd=900;
+    uint16_t btail=3;
+    uint8_t tzone=2;
+    bool beep=true;
+    bool csbkn=true; 
+}beacon;
+beacon beacon_r ;
+
+uint16 DataWrite = 0xAA;
+uint16 AddressWrite = 0x10;
+
+uint8_t temp[8];
+uint16 Status=0;
+uint16 Data;
+
 RTClock rtclock (RTCSEL_LSE,0x7fff); // 0x7fff
 int timezone = 2;      // change to your timezone
 time_t tt, tt1;
 tm_t mtt;
-uint8_t dateread[11];
+uint8_t dateread[20];
 bool dispflag = true;
 
-uint8_t ts=PTT_TIMOUT+2;
+uint8_t ts= beacon_r.btail+2;
 bool alarmflag = false;
 bool bipflag = false;
 bool callorQTH = true;
@@ -179,7 +197,7 @@ void ParseBuildTimestamp(tm_t & mt)
 void alarmset(void)
 {
   rtclock.detachAlarmInterrupt();
-  rtclock.createAlarm(blink, (rtclock.getTime() + ALRMRLD)); 
+  rtclock.createAlarm(blink, (rtclock.getTime() + beacon_r.csgnprd)); 
 }
 
 //-----------------------------------------------------------------------------
@@ -189,7 +207,7 @@ void SecondCount ()
 {
   tt++;
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  if ((ts>=0)&&(ts<=PTT_TIMOUT))
+  if ((ts>=0)&&(ts<= beacon_r.btail))
   {
     segout(ts);
     if (ts==0)
@@ -328,15 +346,119 @@ char playmorse(char* morsearray)
 //-----------------------------------------------------------------------------
 void loop()
 {
-  if ( Serial.available()>10 ) {
-    for (uint8_t i = 0; i<11; i++) {
+  if ( Serial.available()) {
+    uint8_t b=Serial.available();
+    for (uint8_t i = 0; i<b; i++) {
 	    dateread[i] = Serial.read();
     }
     Serial.flush();
-    tt = atol((char*)dateread);
-    rtclock.setTime(rtclock.TimeZone(tt, timezone)); //adjust to your local date
+    if (strstr((char*)dateread,"eph"))
+    {
+      tt = atol((char*)dateread+3);
+      rtclock.setTime(rtclock.TimeZone(tt, beacon_r.tzone)); //adjust to your local date
+      Serial.println("Time set:");
 
-    alarmset();  
+      alarmset();
+    }
+    
+    if (strstr((char*)dateread,"csn"))
+    {
+      Serial.println("Callsign set:");
+      strncpy((char*)beacon_r.csgn, (char*)dateread+4, strlen((char*)dateread)-5);
+      Serial.println((char*)beacon_r.csgn);
+    } 
+    
+    if (strstr((char*)dateread,"qth"))
+    {
+      Serial.println("QTH set:");
+      strncpy((char*)beacon_r.qth, (char*)dateread+4, strlen((char*)dateread)-5);
+      Serial.println((char*)beacon_r.qth);
+    }  
+
+    if (strstr((char*)dateread,"csp"))
+    {
+      Serial.println("Callsign beakon period set:");
+      strncpy((char*)temp, (char*)dateread+4, strlen((char*)dateread)-5);
+      beacon_r.csgnprd=atoi((char*)temp);
+      Serial.println(beacon_r.csgnprd);     
+    } 
+
+    if (strstr((char*)dateread,"btl"))
+    {
+      Serial.println("Beacon tail set:");
+      strncpy((char*)temp, (char*)dateread+4, strlen((char*)dateread)-5);
+      beacon_r.btail=atoi((char*)temp);
+      Serial.println(beacon_r.btail);     
+    } 
+
+    if (strstr((char*)dateread,"tzn"))
+    {
+      Serial.println("Time zone set");
+      strncpy((char*)temp, (char*)dateread+4, strlen((char*)dateread)-5);
+      beacon_r.tzone=atoi((char*)temp);
+      Serial.println(beacon_r.tzone);     
+    }
+     
+    if (strstr((char*)dateread,"bip"))
+    {
+      Serial.println("Rodger beep  set:");
+      if (dateread[4]=='1')
+      {
+        Serial.println("True");
+        beacon_r.beep=true;
+      }
+      else
+      {
+        Serial.println("False");
+        beacon_r.beep=true;
+      }
+    }
+        
+    if (strstr((char*)dateread,"bcn"))
+    {
+      Serial.println("Callsign beacon set:");
+      if (dateread[4]=='1')
+      {
+        Serial.println("True");
+        beacon_r.csbkn=true;
+      }
+      else
+      {
+        Serial.println("False");
+        beacon_r.csbkn=true;
+      }
+    }
+         
+    if (strstr((char*)dateread,"st?"))
+    {
+      Serial.println("Settings list:");
+      Serial.print("Callsign:"); Serial.println((char*)beacon_r.csgn);
+      Serial.print("QTH:"); Serial.println((char*)beacon_r.qth);
+      Serial.print("Beacon period:"); Serial.println(beacon_r.csgnprd);
+      Serial.print("Beacon tail:"); Serial.println(beacon_r.btail);
+      Serial.print("Time zone:"); Serial.println(beacon_r.tzone);
+      Serial.print("Rodger beep enabled:"); Serial.println(beacon_r.beep);
+      Serial.print("Beacon enabled:"); Serial.println(beacon_r.csbkn);    
+    }
+          
+    if (strstr((char*)dateread,"stw"))
+    {    
+      Status = EEPROM.write(AddressWrite, DataWrite);
+      Serial.print("EEPROM.write(0x");
+      Serial.print(AddressWrite, HEX);
+      Serial.print(", 0x");
+      Serial.print(DataWrite, HEX);
+      Serial.print(") : Status : ");
+      Serial.println(Status, HEX);
+
+      Status = EEPROM.read(AddressWrite, &Data);
+      Serial.print("EEPROM.read(0x");
+      Serial.print(AddressWrite, HEX);
+      Serial.print(", &..) = 0x");
+      Serial.print(Data, HEX);
+      Serial.print(" : Status : ");
+      Serial.println(Status, HEX);
+    }
   }
 
   if(digitalRead(pinSQL)==LOW)
@@ -345,7 +467,7 @@ void loop()
     delay(50);
     if (countSQL>=3)
     {
-      ts=PTT_TIMOUT+1;
+      ts=beacon_r.btail+1;
       segout(0xFF);
       countSQL=0;
       alarmset();
@@ -355,9 +477,9 @@ void loop()
   }
   else
   {
-    if (ts==PTT_TIMOUT+1)
+    if (ts==beacon_r.btail+1)
     {
-      ts=PTT_TIMOUT;
+      ts=beacon_r.btail;
     }
     countSQL=0;
     digitalWrite(pinGRN, LOW); 
@@ -367,33 +489,39 @@ void loop()
   {
      bipflag = false;
      //digitalWrite(pinPTT, HIGH);
-     delay(2*bip);
-     tone(pinSND, frq);   
-     delay(bip);                  
-     noTone(pinSND);
-     digitalWrite(pinPTT, LOW);
+     if (beacon_r.beep == true)
+     {
+      delay(2*bip);
+      tone(pinSND, frq);   
+      delay(bip);                  
+      noTone(pinSND);
+      digitalWrite(pinPTT, LOW);
+     }
   }
 
   if(alarmflag == true)
   {
     alarmflag = false;
-    alarmset();  
-    Serial.println(" Alarm ");
-    digitalWrite(pinPTT, HIGH);
-    delay(bip);
-    if (callorQTH==true)
-    {
-      playmorse("UR5TLZ");
-      Serial.println("CallSign");
+    alarmset();
+    if (beacon_r.csbkn == true)
+    {  
+      Serial.println(" Alarm ");
+      digitalWrite(pinPTT, HIGH);
+      delay(bip);
+      if (callorQTH==true)
+      {
+        playmorse("UR0TUA");
+        Serial.println("CallSign");
+      }
+      else
+      {
+        playmorse("KN39MJ");
+        Serial.println("QTH");
+      }
+     callorQTH=!callorQTH;
+     delay(bip);
+     digitalWrite(pinPTT, LOW);
     }
-    else
-    {
-      playmorse("KN39MJ");
-      Serial.println("QTH");
-    }
-    callorQTH=!callorQTH;
-    delay(bip);
-    digitalWrite(pinPTT, LOW);
   }
   
   if (tt1 != tt && dispflag == true )
