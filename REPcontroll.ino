@@ -25,7 +25,7 @@
 #define pinGRN PA8
 
 typedef struct{
-    uint8_t csgn[8]="UR0TUA";
+    uint8_t csgn[8]="UR5TLZ";
     uint8_t qth[8]="KN39MJ";
     uint16_t csgnprd=900;
     uint16_t btail=3;
@@ -273,15 +273,16 @@ void setup()
   rtclock.attachAlarmInterrupt(blink);// Call blink
   rtclock.attachSecondsInterrupt(SecondCount);// Call SecondCount
 
-  alarmset();   
+  alarmset();
+  str();   
 }
 
 
-char playmorse(char* morsearray)
+char playmorse(unsigned char* morsearray)
 {
 
   char arindx=0;
-  while (arindx!=strlen(morsearray))
+  while (arindx!=strlen((char*)morsearray))
   {
        char i=0;
        while (i<MORSETAB)
@@ -309,7 +310,7 @@ char playmorse(char* morsearray)
               
               if ((morse[1][i]&charindx)>0)
               {
-                 //Serial.print(" DIT");
+                 Serial.print(" DIT");
                  //digitalWrite(LED_BUILTIN, LOW);
                  digitalWrite(segDit, LOW);
                  tone(pinSND, frq);   
@@ -321,7 +322,7 @@ char playmorse(char* morsearray)
               }
               else
               {
-                 //Serial.print(" DASH");
+                 Serial.print(" DASH");
                  //digitalWrite(LED_BUILTIN, LOW);
                  digitalWrite(segDash, LOW);
                  tone(pinSND, frq);   
@@ -342,6 +343,22 @@ char playmorse(char* morsearray)
   }
   delay(del);  
 }
+void str(void)
+{
+      Serial.println("Reading settings:");
+      unsigned char *myPtr = (unsigned char *)&beacon_r;
+      const unsigned char *byteToRead;
+      int numberOfBytes = sizeof(beacon);
+      uint16 AdrRMem=0;
+      for(byteToRead=myPtr; numberOfBytes--; ++byteToRead)  
+      { 
+       Status = EEPROM.read(AddressWrite+AdrRMem, &Data);
+       *myPtr++=Data;
+       Serial.print(Data);
+       AdrRMem++;
+       Serial.print(" ");
+      }
+}
 
 //-----------------------------------------------------------------------------
 void loop()
@@ -349,7 +366,7 @@ void loop()
   if ( Serial.available()) {
     uint8_t b=Serial.available();
     for (uint8_t i = 0; i<b; i++) {
-	    dateread[i] = Serial.read();
+      dateread[i] = Serial.read();
     }
     Serial.flush();
     if (strstr((char*)dateread,"eph"))
@@ -380,7 +397,8 @@ void loop()
       Serial.println("Callsign beakon period set:");
       strncpy((char*)temp, (char*)dateread+4, strlen((char*)dateread)-5);
       beacon_r.csgnprd=atoi((char*)temp);
-      Serial.println(beacon_r.csgnprd);     
+      Serial.println(beacon_r.csgnprd); 
+      alarmset();    
     } 
 
     if (strstr((char*)dateread,"btl"))
@@ -410,7 +428,7 @@ void loop()
       else
       {
         Serial.println("False");
-        beacon_r.beep=true;
+        beacon_r.beep=false;
       }
     }
         
@@ -425,7 +443,7 @@ void loop()
       else
       {
         Serial.println("False");
-        beacon_r.csbkn=true;
+        beacon_r.csbkn=false;
       }
     }
          
@@ -443,21 +461,24 @@ void loop()
           
     if (strstr((char*)dateread,"stw"))
     {    
-      Status = EEPROM.write(AddressWrite, DataWrite);
-      Serial.print("EEPROM.write(0x");
-      Serial.print(AddressWrite, HEX);
-      Serial.print(", 0x");
-      Serial.print(DataWrite, HEX);
-      Serial.print(") : Status : ");
-      Serial.println(Status, HEX);
+      Serial.println("Saving settings:");
+      unsigned char *myPtr = (unsigned char *)&beacon_r;
+      const unsigned char *byteToSend;
+      int numberOfBytes = sizeof(beacon);
+      uint16 AdrWMem=0;
+      for(byteToSend=myPtr; numberOfBytes--; ++byteToSend)  
+      { 
+       DataWrite=*byteToSend;
+       Serial.print(DataWrite);
+       Status = EEPROM.write(AddressWrite+AdrWMem, DataWrite);
+       AdrWMem++;
+       Serial.print(" ");
+      }
+    }
 
-      Status = EEPROM.read(AddressWrite, &Data);
-      Serial.print("EEPROM.read(0x");
-      Serial.print(AddressWrite, HEX);
-      Serial.print(", &..) = 0x");
-      Serial.print(Data, HEX);
-      Serial.print(" : Status : ");
-      Serial.println(Status, HEX);
+    if (strstr((char*)dateread,"str"))
+    {    
+      str();
     }
   }
 
@@ -491,6 +512,7 @@ void loop()
      //digitalWrite(pinPTT, HIGH);
      if (beacon_r.beep == true)
      {
+      Serial.println(" Beep ");
       delay(2*bip);
       tone(pinSND, frq);   
       delay(bip);                  
@@ -503,19 +525,19 @@ void loop()
   {
     alarmflag = false;
     alarmset();
+    Serial.println(" Alarm ");
     if (beacon_r.csbkn == true)
     {  
-      Serial.println(" Alarm ");
       digitalWrite(pinPTT, HIGH);
       delay(bip);
       if (callorQTH==true)
       {
-        playmorse("UR0TUA");
+        playmorse(&beacon_r.csgn[0]);
         Serial.println("CallSign");
       }
       else
       {
-        playmorse("KN39MJ");
+        playmorse(&beacon_r.qth[0]);
         Serial.println("QTH");
       }
      callorQTH=!callorQTH;
@@ -532,7 +554,7 @@ void loop()
     sprintf(s, "RTC timestamp: %s %u %u, %s, %02u:%02u:%02u\n",
       months[mtt.month], mtt.day, mtt.year+1970, weekdays[mtt.weekday], mtt.hour, mtt.minute, mtt.second);
     Serial.print(s);
-    if (mtt.second==0)
+    if (false)//(mtt.second==0)
     {
       segout(mtt.hour/10);
       Serial.print(mtt.hour/10);
