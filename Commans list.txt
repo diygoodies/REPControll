@@ -1,0 +1,93 @@
+Commands:
+//---------------------------------------------------------
+1) Settings
+
+st?
+
+Callsign:UR0TUA
+QTH:KN39MJ
+Beacon period:30
+Beacon tail:3
+Time zone:2
+Rodger beep enabled:1
+Beacon enabled:1
+//---------------------------------------------------------
+2) Set Time https://www.epochconverter.com/
+
+eph 1563623259
+
+Time set:
+//---------------------------------------------------------
+3) Set CallSign
+
+csn UR5TLZ
+
+Callsign set:
+UR5TLZ
+//---------------------------------------------------------
+4) Set QTH
+
+qth KN39MK
+
+QTH set:
+KN39MK
+//---------------------------------------------------------
+5) Set Callsign beakon period in seconds
+
+csp 900
+
+Callsign beakon period set:
+900
+//---------------------------------------------------------
+6) Set Beacon tail period in seconds
+
+btl 3
+
+Beacon tail set:
+3
+//---------------------------------------------------------
+7) Set Time zone
+
+tzn 2
+
+Time zone set
+2
+//---------------------------------------------------------
+8) Set Rodger beep
+
+bip 0
+
+Rodger beep  set:
+False
+
+bip 1
+
+Rodger beep  set:
+True
+//---------------------------------------------------------
+9) Set Rodger beep
+
+bcn 1
+
+Callsign beacon set:
+True
+
+bcn 0
+
+Callsign beacon set:
+False
+
+//---------------------------------------------------------
+10) Save to flash
+
+stw
+
+Saving settings:
+
+//---------------------------------------------------------
+10) Read from flash
+
+str
+
+Reading settings:
+

@@ -25,8 +25,9 @@
 #define pinGRN PA8
 
 typedef struct{
-    uint8_t csgn[8]="UR5TLZ";
-    uint8_t qth[8]="KN39MJ";
+    uint8_t sb=0xAA;
+    uint8_t csgn[10]="UR5TLZ";
+    uint8_t qth[10]="KN39MJ";
     uint16_t csgnprd=900;
     uint16_t btail=3;
     uint8_t tzone=2;
@@ -274,7 +275,11 @@ void setup()
   rtclock.attachSecondsInterrupt(SecondCount);// Call SecondCount
 
   alarmset();
-  str();   
+  EEPROM.read(AddressWrite, &Data);
+  if (Data==0xAA)
+  {
+    str();
+  }   
 }
 
 
@@ -310,7 +315,7 @@ char playmorse(unsigned char* morsearray)
               
               if ((morse[1][i]&charindx)>0)
               {
-                 Serial.print(" DIT");
+                 Serial.print("DIT ");
                  //digitalWrite(LED_BUILTIN, LOW);
                  digitalWrite(segDit, LOW);
                  tone(pinSND, frq);   
@@ -322,7 +327,7 @@ char playmorse(unsigned char* morsearray)
               }
               else
               {
-                 Serial.print(" DASH");
+                 Serial.print("DASH ");
                  //digitalWrite(LED_BUILTIN, LOW);
                  digitalWrite(segDash, LOW);
                  tone(pinSND, frq);   
@@ -365,8 +370,17 @@ void loop()
 {
   if ( Serial.available()) {
     uint8_t b=Serial.available();
+    //Serial.println(b);
     for (uint8_t i = 0; i<b; i++) {
       dateread[i] = Serial.read();
+      //Serial.print(dateread[i],HEX);
+      //Serial.print(" ");
+    }
+    //Serial.println(" ");
+    if (dateread[b]!=0x0A)
+    {
+      dateread[b]=0x0A;
+      //Serial.println("0x0A");
     }
     Serial.flush();
     if (strstr((char*)dateread,"eph"))
@@ -374,7 +388,6 @@ void loop()
       tt = atol((char*)dateread+3);
       rtclock.setTime(rtclock.TimeZone(tt, beacon_r.tzone)); //adjust to your local date
       Serial.println("Time set:");
-
       alarmset();
     }
     
@@ -403,7 +416,7 @@ void loop()
 
     if (strstr((char*)dateread,"btl"))
     {
-      Serial.println("Beacon tail set:");
+      Serial.println("Beacon tail period set:");
       strncpy((char*)temp, (char*)dateread+4, strlen((char*)dateread)-5);
       beacon_r.btail=atoi((char*)temp);
       Serial.println(beacon_r.btail);     
@@ -517,8 +530,8 @@ void loop()
       tone(pinSND, frq);   
       delay(bip);                  
       noTone(pinSND);
-      digitalWrite(pinPTT, LOW);
      }
+     digitalWrite(pinPTT, LOW);
   }
 
   if(alarmflag == true)
