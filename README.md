@@ -14,13 +14,14 @@ Schematics https://github.com/diygoodies/REPControll/blob/master/Schematics/REPC
   
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/s5PwGDG2AOU/0.jpg)](https://www.youtube.com/watch?v=s5PwGDG2AOU)
 
+USART comamands list: https://github.com/diygoodies/REPControll/Commandslist.txt
 
   1. Blink on PC13 per 2s 
-  2. Second counter by attachSecondsInterrupt
-  3. change to your timezone in the sketch;
-  4. get Unix epoch time from https://www.epochconverter.com/ ;
-  5. last step input the 10 digit number( example: 1503945555) to Serialport ;
-  6. the clock will be reset to you wanted.
+  2. Seconds counter by attachSecondsInterrupt
+  3. Change to your timezone in the sketch;
+  4. Get Unix epoch time from https://www.epochconverter.com/ ;
+  5. Last step input the 10 digit number( example: 1503945555) to Serialport ;
+  6. The clock will be reset to you wanted.
 
 ## Development setup
 Code based on BluePill-RTClock-test example of
