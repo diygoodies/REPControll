@@ -274,12 +274,12 @@ void setup()
   rtclock.attachAlarmInterrupt(blink);// Call blink
   rtclock.attachSecondsInterrupt(SecondCount);// Call SecondCount
 
-  alarmset();
   EEPROM.read(AddressWrite, &Data);
   if (Data==0xAA)
   {
     str();
   }   
+  alarmset();
 }
 
 
@@ -346,7 +346,8 @@ char playmorse(unsigned char* morsearray)
     arindx++;
     delay(charpause-elementpause);
   }
-  delay(del);  
+  delay(del);
+  Serial.println(" ");  
 }
 void str(void)
 {
