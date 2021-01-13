@@ -14,7 +14,7 @@ Schematics https://github.com/diygoodies/REPControll/blob/master/Schematics/REPC
   
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/s5PwGDG2AOU/0.jpg)](https://www.youtube.com/watch?v=s5PwGDG2AOU)
 
-USART comamands list: https://github.com/diygoodies/REPControll/Commandslist.txt
+USART comamands list: https://github.com/diygoodies/REPControll/blob/master/Commandslist.txt
 
   1. Blink on PC13 per 2s 
   2. Seconds counter by attachSecondsInterrupt
