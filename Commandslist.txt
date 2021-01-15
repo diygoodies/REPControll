@@ -65,7 +65,7 @@ bip 1
 Rodger beep  set:
 True
 //---------------------------------------------------------
-9) Set Rodger beep
+9) Set Callsign beacon
 
 bcn 1
 

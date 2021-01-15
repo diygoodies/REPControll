@@ -532,7 +532,7 @@ void loop()
       delay(bip);                  
       noTone(pinSND);
      }
-     delay(bip*3);
+     //delay(bip*3);
      digitalWrite(pinPTT, LOW);
   }
 
