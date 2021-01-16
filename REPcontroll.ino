@@ -48,7 +48,7 @@ int timezone = 2;      // change to your timezone
 time_t tt, tt1;
 tm_t mtt;
 uint8_t dateread[20];
-bool dispflag = true;
+bool dispflag = false;
 
 uint8_t ts= beacon_r.btail+2;
 bool alarmflag = false;
@@ -499,10 +499,11 @@ void loop()
   if(digitalRead(pinSQL)==LOW)
   {
     countSQL++;
+    bipflag = false;
     delay(50);
     if (countSQL>=3)
     {
-      ts=beacon_r.btail+1;
+      ts=beacon_r.btail;//+1;
       segout(0xFF);
       countSQL=0;
       alarmset();
@@ -512,10 +513,10 @@ void loop()
   }
   else
   {
-    if (ts==beacon_r.btail+1)
+    /*if (ts==beacon_r.btail+1)
     {
       ts=beacon_r.btail;
-    }
+    }*/
     countSQL=0;
     digitalWrite(pinGRN, LOW); 
   }
@@ -527,7 +528,7 @@ void loop()
      if (beacon_r.beep == true)
      {
       Serial.println(" Beep ");
-      delay(2*bip);
+      //delay(2*bip);
       tone(pinSND, frq);   
       delay(bip);                  
       noTone(pinSND);
